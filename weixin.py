@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # coding: utf-8
 import qrcode
 import urllib
@@ -700,13 +700,15 @@ class WebWeixin(object):
             msgType = msg['MsgType']
             name = self.getUserRemarkName(msg['FromUserName'])
             content = msg['Content'].replace('&lt;', '<').replace('&gt;', '>')
+            content = content.split('<br/>')[-1]
             msgid = msg['MsgId']
 
             if msgType == 1:
                 raw_msg = {'raw_msg': msg}
                 self._showMsg(raw_msg)
                 if self.autoReplyMode:
-                    ans = self._xiaodoubi(content) + '\n[微信机器人自动回复]'
+                    # ans = self._xiaodoubi(content) + '\n[微信机器人自动回复]'
+                    ans = content
                     if self.webwxsendmsg(ans, msg['FromUserName']):
                         print '自动回复: ' + ans
                         logging.info('自动回复: ' + ans)
@@ -908,7 +910,7 @@ class WebWeixin(object):
             print self
         logging.debug(self)
 
-        if self.interactive and raw_input('[*] 是否开启自动回复模式(y/n): ') == 'y':
+        if 1:#self.interactive and raw_input('[*] 是否开启自动回复模式(y/n): ') == 'y':
             self.autoReplyMode = True
             print '[*] 自动回复模式 ... 开启'
             logging.debug('[*] 自动回复模式 ... 开启')
