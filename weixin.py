@@ -8,6 +8,7 @@ import requests
 import xml.dom.minidom
 import json
 import time
+import datetime
 import re
 import sys
 import os
@@ -18,6 +19,9 @@ import logging
 from collections import defaultdict
 from urlparse import urlparse
 from lxml import html
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 # for media upload
 import mimetypes
@@ -98,7 +102,7 @@ class WebWeixin(object):
         self.GroupMemeberList = []  # 群友
         self.PublicUsersList = []  # 公众号／服务号
         self.SpecialUsersList = []  # 特殊账号
-        self.autoReplyMode = False
+        self.autoReplyMode = True
         self.syncHost = ''
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36'
         self.interactive = False
@@ -389,7 +393,84 @@ class WebWeixin(object):
         dic = r.json()
         return dic['BaseResponse']['Ret'] == 0
 
+    # def webwxuploadmedia(self, image_name):
+    #     url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
+    #     # 计数器
+    #     self.media_count = self.media_count + 1
+    #     # 文件名
+    #     file_name = image_name
+    #     # MIME格式
+    #     # mime_type = application/pdf, image/jpeg, image/png, etc.
+    #     mime_type = mimetypes.guess_type(image_name, strict=False)[0]
+    #     # 微信识别的文档格式，微信服务器应该只支持两种类型的格式。pic和doc
+    #     # pic格式，直接显示。doc格式则显示为文件。
+    #     media_type = 'pic' if mime_type.split('/')[0] == 'image' else 'doc'
+    #     # 上一次修改日期
+    #     lastModifieDate = 'Thu Mar 17 2016 00:55:10 GMT+0800 (CST)'
+    #     # lastModifieDate = datetime.datetime.now()
+    #     # 文件大小
+    #     file_size = os.path.getsize(file_name)
+    #     # PassTicket
+    #     pass_ticket = self.pass_ticket
+    #     # clientMediaId
+    #     client_media_id = str(int(time.time() * 1000)) + \
+    #         str(random.random())[:5].replace('.', '')
+    #     # webwx_data_ticket
+    #     webwx_data_ticket = ''
+    #     for item in self.cookie:
+    #         if item.name == 'webwx_data_ticket':
+    #             webwx_data_ticket = item.value
+    #             break
+    #     if (webwx_data_ticket == ''):
+    #         return "None Fuck Cookie"
+    #
+    #     uploadmediarequest = json.dumps({
+    #         "BaseRequest": self.BaseRequest,
+    #         "ClientMediaId": client_media_id,
+    #         "TotalLen": file_size,
+    #         "StartPos": 0,
+    #         "DataLen": file_size,
+    #         "MediaType": 4
+    #     }, ensure_ascii=False).encode('utf8')
+    #
+    #     multipart_encoder = MultipartEncoder(
+    #         fields={
+    #             'id': 'WU_FILE_' + str(self.media_count),
+    #             'name': file_name,
+    #             'type': mime_type,
+    #             'lastModifieDate': lastModifieDate,
+    #             'size': str(file_size),
+    #             'mediatype': media_type,
+    #             'uploadmediarequest': uploadmediarequest,
+    #             'webwx_data_ticket': webwx_data_ticket,
+    #             'pass_ticket': pass_ticket,
+    #             'filename': (file_name, open(file_name, 'rb'), mime_type.split('/')[1])
+    #         },
+    #         boundary='-----------------------------1575017231431605357584454111'
+    #     )
+    #
+    #     headers = {
+    #         'Host': 'file2.wx.qq.com',
+    #         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0',
+    #         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #         'Accept-Language': 'zh-CN,zh;q=0.5',
+    #         'Accept-Encoding': 'gzip, deflate',
+    #         'Referer': 'https://wx2.qq.com/',
+    #         'Content-Type': multipart_encoder.content_type,
+    #         'Origin': 'https://wx2.qq.com',
+    #         'Connection': 'keep-alive',
+    #         'Pragma': 'no-cache',
+    #         'Cache-Control': 'no-cache'
+    #     }
+    #
+    #     r = requests.post(url, data=multipart_encoder, headers=headers)
+    #     response_json = r.json()
+    #     if response_json['BaseResponse']['Ret'] == 0:
+    #         return response_json
+    #     return None
+
     def webwxuploadmedia(self, image_name):
+        # url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
         url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
         # 计数器
         self.media_count = self.media_count + 1
@@ -403,6 +484,7 @@ class WebWeixin(object):
         media_type = 'pic' if mime_type.split('/')[0] == 'image' else 'doc'
         # 上一次修改日期
         lastModifieDate = 'Thu Mar 17 2016 00:55:10 GMT+0800 (CST)'
+        # lastModifieDate = datetime.datetime.now()
         # 文件大小
         file_size = os.path.getsize(file_name)
         # PassTicket
@@ -447,9 +529,9 @@ class WebWeixin(object):
         headers = {
             'Host': 'file2.wx.qq.com',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept': '*/*',
+            'Accept-Language': 'zh-CN,zh;q=0.8,en-US;1=0.6,en;q=0.4',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Referer': 'https://wx2.qq.com/',
             'Content-Type': multipart_encoder.content_type,
             'Origin': 'https://wx2.qq.com',
@@ -485,6 +567,27 @@ class WebWeixin(object):
         dic = r.json()
         return dic['BaseResponse']['Ret'] == 0
 
+    def webwxsendmsgfile(self, user_id, content):
+        url = 'https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxsendappmsg?fun=async&f=json&pass_ticket=%s' % self.pass_ticket
+        clientMsgId = str(int(time.time() * 1000)) + \
+            str(random.random())[:5].replace('.', '')
+        data_json = {
+            "BaseRequest": self.BaseRequest,
+            "Msg": {
+                "Type": 6,
+                "Content": content,
+                "FromUserName": self.User['UserName'],
+                "ToUserName": user_id,
+                "LocalID": clientMsgId,
+                "ClientMsgId": clientMsgId
+            }
+        }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        data = json.dumps(data_json, ensure_ascii=False).encode('utf8')
+        r = requests.post(url, data=data, headers=headers)
+        dic = r.json()
+        return dic['BaseResponse']['Ret'] == 0
+
     def webwxsendmsgemotion(self, user_id, media_id):
         url = 'https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxsendemoticon?fun=sys&f=json&pass_ticket=%s' % self.pass_ticket
         clientMsgId = str(int(time.time() * 1000)) + \
@@ -508,6 +611,32 @@ class WebWeixin(object):
         if self.DEBUG:
             print json.dumps(dic, indent=4)
             logging.debug(json.dumps(dic, indent=4))
+        return dic['BaseResponse']['Ret'] == 0
+
+    #can't use
+    def weblinksendmsg(self, Url, FileName, content, to='filehelper'):
+        url = self.base_uri + \
+            '/webwxsendmsg?pass_ticket=%s' % (self.pass_ticket)
+        clientMsgId = str(int(time.time() * 1000)) + \
+            str(random.random())[:5].replace('.', '')
+        params = {
+            'BaseRequest': self.BaseRequest,
+            'Msg': {
+                "Type": 49,
+                "AppMsgType": 5,
+                "FromUserName": self.User['UserName'],
+                "ToUserName": to,
+                "Url": Url,
+                "FileName": self._transcoding(FileName),
+                "Content": content,
+                "LocalID": clientMsgId,
+                "ClientMsgId": clientMsgId
+            }
+        }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        data = json.dumps(params, ensure_ascii=False).encode('utf8')
+        r = requests.post(url, data=data, headers=headers)
+        dic = r.json()
         return dic['BaseResponse']['Ret'] == 0
 
     def _saveFile(self, filename, data, api=None):
@@ -708,19 +837,40 @@ class WebWeixin(object):
                 self._showMsg(raw_msg)
                 if self.autoReplyMode:
                     # ans = self._xiaodoubi(content) + '\n[微信机器人自动回复]'
-                    ans = content
-                    if self.webwxsendmsg(ans, msg['FromUserName']):
-                        print '自动回复: ' + ans
-                        logging.info('自动回复: ' + ans)
-                    else:
-                        print '自动回复失败'
-                        logging.info('自动回复失败')
+                    try:
+                        ans = self._localserver(content)
+                        if ans:
+                            message = ans[0]
+                            message_type = message["type"]
+                            if '0'==message_type:#文字消息
+                                if self.webwxsendmsg(message["text"], msg['FromUserName']):
+                                    print u'文字回复: ' + self._transcoding(message["text"])
+                                    logging.info(u'文字回复: ' + self._transcoding(message["text"]))
+                            elif '1'==message_type:#图片消息
+                                if self.sendImg(name, message["image"]):
+                                    print u'图片回复: ' + message["image"]
+                                    logging.info(u'图片回复: ' + message["image"])
+                            elif '2'==message_type:#文件消息
+                                if self.sendFile(name, message["file"]):
+                                    print u'文件回复: ' + message["file"]
+                                    logging.info(u'文件回复: ' + message["file"])
+                        else:
+                            print u'内容不匹配'
+                            logging.info(u'内容不匹配')
+                    except Exception, err:
+                        s=sys.exc_info()
+                        print err
+                        # print s[1], s[2].tb_next.tb_lineno
+                        logging.info(err)
+                        # logging.info(s[1]+s[2].tb_next.tb_lineno)
+
             elif msgType == 3:
                 image = self.webwxgetmsgimg(msgid)
                 raw_msg = {'raw_msg': msg,
                            'message': '%s 发送了一张图片: %s' % (name, image)}
                 self._showMsg(raw_msg)
                 self._safe_open(image)
+                # self.sendImg(name, image)#发送接收到的图片
             elif msgType == 34:
                 voice = self.webwxgetvoice(msgid)
                 raw_msg = {'raw_msg': msg,
@@ -748,6 +898,7 @@ class WebWeixin(object):
             elif msgType == 49:
                 appMsgType = defaultdict(lambda: "")
                 appMsgType.update({5: '链接', 3: '音乐', 7: '微博'})
+                # self.weblinksendmsg(msg['Url'], self._transcoding(msg['FileName']), content, msg['FromUserName'])
                 print '%s 分享了一个%s:' % (name, appMsgType[msg['AppMsgType']])
                 print '========================='
                 print '= 标题: %s' % msg['FileName']
@@ -866,6 +1017,17 @@ class WebWeixin(object):
             media_id = response['MediaId']
         user_id = self.getUSerID(name)
         response = self.webwxsendmsgimg(user_id, media_id)
+
+    def sendFile(self, name, file_name):
+        response = self.webwxuploadmedia(file_name)
+        file_type = mimetypes.guess_type(file_name, strict=False)[0]
+        content = ""
+        if response is not None:
+            content = "<appmsg appid=%s sdkver=''><title>%s</title><des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl><appattach><totallen>%d</totallen><attachid>%s</attachid><fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>" \
+            % (self.appid, file_name.split('/')[-1], response['StartPos'], response['MediaId'], file_type.split('/')[-1])
+            # media_id = response['MediaId']
+        user_id = self.getUSerID(name)
+        response = self.webwxsendmsgfile(user_id, content)
 
     def sendEmotion(self, name, file_name):
         response = self.webwxuploadmedia(file_name)
@@ -1028,6 +1190,14 @@ class WebWeixin(object):
             return r.content
         except:
             return "让我一个人静静 T_T..."
+
+    def _localserver(self, word):
+        url = 'http://127.0.0.1:8008/wechat/wechat_messages/?title=' + word.decode('utf-8')
+        try:
+            r = requests.get(url)
+            return r.json()
+        except:
+            return None
 
     def _simsimi(self, word):
         key = ''
